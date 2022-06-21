@@ -1,6 +1,8 @@
 import pandas as pd
 
 def stock_dataset_processor(dataset: pd.DataFrame) -> pd.DataFrame:
+    print(f'Stock price data is from {dataset["Date"][0]} to {dataset["Date"][len(dataset["Date"])-1]}')
+    
     dataset['Date'] = dataset['Close']
 
     dataset = dataset.drop(columns='Volume', axis=1)
