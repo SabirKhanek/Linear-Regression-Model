@@ -24,7 +24,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from alive_progress import alive_bar; import time
-import dataset
+import dataset                    # local py file
+from easygui import fileopenbox   # to get path of csv file
 
 class multiple_regression_model:
     """
@@ -50,7 +51,6 @@ class multiple_regression_model:
         # select a row in each iteration and append 1 at the last of it
         for i in range(0, len(lst)):
             lst[i].append(1)
-
         return lst
 
     """
@@ -61,7 +61,7 @@ class multiple_regression_model:
         y_predicted:  which include predictions against every feature set produced by multiplication of thetas
     """
     def predict(self, features: list[list]) -> np.array:
-        # add a column with 1 on right side of the matrix 
+        # add a column with 1 on right side of the matrix
         features = self.append_one(features)
         # converting 2d list in np array matrix so that multiplication of vectors can evaluated
         features = np.array(features)
@@ -229,20 +229,7 @@ def cost_intercept_parabola(model: multiple_regression_model, features: list[lis
 
 
 if __name__ == "__main__":
-    print('Regression Model Test Simulations')
-    print('Select from local datasets:')
-    print('1. Property Dataset (12000 train_rows, 70 feature columns)')
-    inp = input("Enter your choice: ")
-    inp = int(inp)
-    if inp in range(1, 3):
-        if inp == 1:
-            dataset_x , dataset_y, test_data_x, test_data_y, epoch, learn_rate = dataset.property_dataset()
-        if inp == 2:
-            dataset_x , dataset_y, test_data_x, test_data_y, epoch, learn_rate = dataset.car_dataset()
-    else:
-        print('Invalid Choice...')
-        input()
-        exit()
+    dataset_x , dataset_y, test_data_x, test_data_y, epoch, learn_rate = dataset.select_dataset()
 
     # initializing our model    
     model = multiple_regression_model()
@@ -251,6 +238,7 @@ if __name__ == "__main__":
     model.gradient_descent(dataset_x, dataset_y, epoch, learn_rate)
 
     # getting predictions by fetching test data features to the model
+    
     y_predicted = model.predict(test_data_x)
     
     # reshaping initially vertical vector to horizontal vector and converting them to lists i.e., (n, 1) -> (1, n)
@@ -275,22 +263,27 @@ if __name__ == "__main__":
     print(result_df)
 
     # Displaying final error % after training and prediction accuracy achieved from testing data 
-    print(f"Accuracy: {np.round(a=1-test_err, decimals=4) * 100}%")
-    print(f"Training Error: {round(model.train_log[-1], 4) * 100}%")
+    print(f"Training Error: {np.round(model.train_log[-1], decimals=4)}")
 
+    # parabolic graph
     cost_intercept_costs,  cost_intercept_intercepts = cost_intercept_parabola(model=model, features=test_data_x, actual=test_data_y)
 
-    figure, axis = plt.subplots(1, 2)
-    axis[0].plot(cost_intercept_intercepts, cost_intercept_costs)
-    axis[0].set_xlabel('Y - Intercept')
-    axis[0].set_ylabel('Mean Squared Error (MSE)')
-    axis[0].set_title('Error variation wrt Y - Intercept')
 
+    # Plot the simulations using matplotlib
+    figure, axis = plt.subplots(2, 2, figsize=(10, 10))
+    axis[0][0].plot(cost_intercept_intercepts, cost_intercept_costs)
+    axis[0][0].set_xlabel('Y - Intercept')
+    axis[0][0].set_ylabel('Mean Squared Error (MSE)')
+    axis[0][0].set_title('Error variation wrt Y - Intercept')
 
-    # plotting simulations
-    axis[1].plot(list(range(0, model.trained_at_epoch)), model.train_log)
-    axis[1].set_xlabel('Epoch')
-    axis[1].set_ylabel('MSE (Mean Squared Error)')
-    axis[1].set_title('Error variance with increasing Epochs')
+    axis[0][1].plot(list(range(len(y_predicted))), y_predicted, color='red', label='Predicted')
+    axis[0][1].plot(list(range(len(test_data_y))), test_data_y, color='blue', label='Actual')
+    axis[0][1].legend()
+    axis[0][1].set_title('Predicted vs Actual')
+
+    axis[1][1].plot(list(range(0, model.trained_at_epoch)), model.train_log)
+    axis[1][1].set_xlabel('Epoch')
+    axis[1][1].set_ylabel('MSE (Mean Squared Error)')
+    axis[1][1].set_title('Error variance with increasing Epochs')
     
     plt.show()
